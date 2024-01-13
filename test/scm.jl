@@ -21,13 +21,13 @@ using TMLE
 
     scm_dict = TMLE.to_dict(scm)
     @test scm_dict == Dict(
-        :type => "SCM", 
+        :type => "SCM",
         :equations => [
-            Dict(:parents => Any[], :outcome => :C), 
-            Dict(:parents => Any[], :outcome => :W₁), 
-            Dict(:parents => [:C, :W₁, :T₁, :W₂, :T₂], :outcome => :Y), 
-            Dict(:parents => [:W₁], :outcome => :T₁), 
-            Dict(:parents => Any[], :outcome => :W₂), 
+            Dict(:parents => Any[], :outcome => :C),
+            Dict(:parents => Any[], :outcome => :W₁),
+            Dict(:parents => [:C, :W₁, :T₁, :W₂, :T₂], :outcome => :Y),
+            Dict(:parents => [:W₁], :outcome => :T₁),
+            Dict(:parents => Any[], :outcome => :W₂),
             Dict(:parents => [:W₂], :outcome => :T₂)
         ]
     )
@@ -54,9 +54,9 @@ end
 
 @testset "Test StaticSCM" begin
     scm = StaticSCM(
-        outcomes = [:Y₁, :Y₂],
-        treatments = [:T₁, :T₂, :T₃],
-        confounders = [:W₁, :W₂],
+        outcomes=[:Y₁, :Y₂],
+        treatments=[:T₁, :T₂, :T₃],
+        confounders=[:W₁, :W₂],
     )
     @test parents(scm, :Y₁) == parents(scm, :Y₂) == Set([:T₁, :T₂, :T₃, :W₁, :W₂])
     @test parents(scm, :T₁) == parents(scm, :T₂) == parents(scm, :T₃) == Set([:W₁, :W₂])
@@ -71,6 +71,12 @@ end
         @test parents(reconstructed_scm, vertexlabel) == parents(scm, vertexlabel)
     end
 
+end
+
+@testset "Continuous Treatment" begin
+    scm = StaticSCM([:Y], [1.5, 2.3], [:W₁, :W₂, :W₃])
+    @test vertices(scm) == [:Y, 1.5, 2.3, :W₁, :W₂, :W₃]
+    @test parents(scm, :Y) == Set([1.5, 2.3, :W₁, :W₂, :W₃])
 end
 
 end

@@ -2,7 +2,7 @@
 ###                    Abstract Estimand                          ###
 #####################################################################
 """
-A Estimand is a functional on distribution space Ψ: ℳ → ℜ. 
+A Estimand is a functional on distribution space Ψ: ℳ → ℜ.
 """
 abstract type Estimand end
 
@@ -24,14 +24,15 @@ AbsentLevelError(treatment_name, val, levels) = ArgumentError(string(
 """
     check_treatment_settings(settings::NamedTuple, levels, treatment_name)
 
-Checks the case/control values defining the treatment contrast are present in the dataset levels. 
+Checks the case/control values defining the treatment contrast are present in the dataset levels.
+This function can handle both categorical and continuous treatments.
 
-Note: This method is for estimands like the ATE or IATE that have case/control treatment settings represented as 
+Note: This method is for estimands like the ATE or IATE that have case/control treatment settings represented as
 `NamedTuple`.
 """
 function check_treatment_settings(settings::NamedTuple, levels, treatment_name)
-    for (key, val) in zip(keys(settings), settings) 
-        any(val .== levels) || 
+    for (key, val) in zip(keys(settings), settings)
+        any(val .== levels) ||
             throw(AbsentLevelError(treatment_name, key, val, levels))
     end
 end
@@ -39,21 +40,22 @@ end
 """
     check_treatment_settings(setting, levels, treatment_name)
 
-Checks the value defining the treatment setting is present in the dataset levels. 
+Checks the value defining the treatment setting is present in the dataset levels.
 
-Note: This is for estimands like the CM that do not have case/control treatment settings 
+Note: This is for estimands like the CM that do not have case/control treatment settings
 and are represented as simple values.
 """
 function check_treatment_settings(setting, levels, treatment_name)
-    any(setting .== levels) || 
-            throw(
-                AbsentLevelError(treatment_name, setting, levels))
+    any(setting .== levels) ||
+        throw(
+            AbsentLevelError(treatment_name, setting, levels))
 end
 
 """
     check_treatment_levels(Ψ::Estimand, dataset)
 
 Makes sure the defined treatment levels are present in the dataset.
+This function can handle both categorical and continuous treatments.
 """
 function check_treatment_levels(Ψ::Estimand, dataset)
     for treatment_name in treatments(Ψ)
@@ -86,7 +88,7 @@ struct ConditionalDistribution <: Estimand
     end
 end
 
-string_repr(estimand::ConditionalDistribution) = 
+string_repr(estimand::ConditionalDistribution) =
     string("P₀(", estimand.outcome, " | ", join(estimand.parents, ", "), ")")
 
 variables(estimand::ConditionalDistribution) = (estimand.outcome, estimand.parents...)
@@ -97,7 +99,7 @@ variables(estimand::ConditionalDistribution) = (estimand.outcome, estimand.paren
 
 """
 Defines an Expected Value estimand ``parents → E[Outcome|parents]``.
-At the moment there is no distinction between an Expected Value and 
+At the moment there is no distinction between an Expected Value and
 a Conditional Distribution because they are estimated in the same way.
 """
 const ExpectedValue = ConditionalDistribution
@@ -113,17 +115,17 @@ end
 
 ComposedEstimand(f::String, args::AbstractVector) = ComposedEstimand(eval(Meta.parse(f)), Tuple(args))
 
-ComposedEstimand(;f, args) = ComposedEstimand(f, args)
+ComposedEstimand(; f, args) = ComposedEstimand(f, args)
 
 function to_dict(Ψ::ComposedEstimand)
     fname = string(nameof(Ψ.f))
-    startswith(fname, "#") && 
+    startswith(fname, "#") &&
         throw(ArgumentError("The function of a ComposedEstimand cannot be anonymous to be converted to a dictionary."))
     return Dict(
-    :type => string(ComposedEstimand),
-    :f => fname,
-    :args => [to_dict(x) for x in Ψ.args]
-)
+        :type => string(ComposedEstimand),
+        :f => fname,
+        :args => [to_dict(x) for x in Ψ.args]
+    )
 end
 
 propensity_score_key(Ψ::ComposedEstimand) = Tuple(unique(Iterators.flatten(propensity_score_key(arg) for arg in Ψ.args)))
@@ -134,5 +136,5 @@ n_uniques_nuisance_functions(Ψ::ComposedEstimand) = length(propensity_score_key
 nuisance_functions_iterator(Ψ::ComposedEstimand) =
     Iterators.flatten(nuisance_functions_iterator(arg) for arg in Ψ.args)
 
-identify(method::AdjustmentMethod, Ψ::ComposedEstimand, scm) = 
+identify(method::AdjustmentMethod, Ψ::ComposedEstimand, scm) =
     ComposedEstimand(Ψ.f, Tuple(identify(method, arg, scm) for arg ∈ Ψ.args))

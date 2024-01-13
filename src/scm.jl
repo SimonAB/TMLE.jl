@@ -7,9 +7,9 @@ A SCM is simply a wrapper around a MetaGraph over a Directed Acyclic Graph.
 """
 struct SCM
     graph::MetaGraph
-    
+
     function SCM(equations)
-        graph =  MetaGraph(
+        graph = MetaGraph(
             SimpleDiGraph();
             label_type=Symbol,
             vertex_data_type=Nothing,
@@ -21,7 +21,7 @@ struct SCM
     end
 end
 
-SCM(;equations=()) = SCM(equations)
+SCM(; equations=()) = SCM(equations)
 
 function string_repr(scm::SCM)
     string_rep = "SCM\n---"
@@ -41,7 +41,7 @@ Base.show(io::IO, ::MIME"text/plain", scm::SCM) =
     println(io, string_repr(scm))
 
 split_outcome_parent_pair(outcome_parents_pair::Pair) = outcome_parents_pair
-split_outcome_parent_pair(outcome_parents_pair::Dict{T, Any}) where T = outcome_parents_pair[T(:outcome)], outcome_parents_pair[T(:parents)] 
+split_outcome_parent_pair(outcome_parents_pair::Dict{T,Any}) where {T} = outcome_parents_pair[T(:outcome)], outcome_parents_pair[T(:parents)]
 
 function add_equations!(scm::SCM, equations...)
     for outcome_parents_pair in equations
@@ -54,7 +54,11 @@ function add_equation!(scm::SCM, outcome_parents_pair)
     outcome_symbol = Symbol(outcome)
     add_vertex!(scm.graph, outcome_symbol)
     for parent in parents
-        parent_symbol = Symbol(parent)
+        if parent isa Number
+            parent_symbol = parent
+        else
+            parent_symbol = Symbol(parent)
+        end
         add_vertex!(scm.graph, parent_symbol)
         add_edge!(scm.graph, parent_symbol, outcome_symbol)
     end
@@ -83,11 +87,11 @@ function StaticSCM(outcomes, treatments, confounders)
     return SCM(equations=(outcome_equations..., treatment_equations...))
 end
 
-StaticSCM(;outcomes, treatments, confounders) = 
+StaticSCM(; outcomes, treatments, confounders) =
     StaticSCM(outcomes, treatments, confounders)
 
 
 to_dict(scm::SCM) = Dict(
     :type => "SCM",
-    :equations => [Dict(:outcome => label, :parents => collect(parents(scm, label))) for label ∈ vertices(scm)]
+    :equations => [Dict(:outcome => label, :parents => [parent isa Symbol ? String(parent) : parent for parent in parents(scm, label)]) for label ∈ vertices(scm)]
 )

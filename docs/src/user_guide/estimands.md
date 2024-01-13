@@ -17,8 +17,8 @@ In what follows, ``P`` is a probability distribution generating an outcome ``Y``
 ```@example estimands
 using TMLE
 scm = StaticSCM(
-    outcomes=[:Y], 
-    treatments=[:T₁, :T₂], 
+    outcomes=[:Y],
+    treatments=[:T₁, :T₂],
     confounders=[:W]
 )
 ```
@@ -59,7 +59,7 @@ or defined directly:
 
 ```@example estimands
 statisticalΨ = CM(
-    outcome=:Y, 
+    outcome=:Y,
     treatment_values=(T₁=1, T₂=0),
     treatment_confounders=(T₁=[:W], T₂=[:W])
 )
@@ -92,9 +92,9 @@ A causal estimand is given by:
 
 ```@example estimands
 causalΨ = ATE(
-    outcome=:Y, 
+    outcome=:Y,
     treatment_values=(
-        T₁=(case=1, control=0), 
+        T₁=(case=1, control=0),
         T₂=(case=1, control=0)
     )
 )
@@ -110,9 +110,9 @@ or defined directly:
 
 ```@example estimands
 statisticalΨ = ATE(
-    outcome=:Y, 
+    outcome=:Y,
     treatment_values=(
-        T₁=(case=1, control=0), 
+        T₁=(case=1, control=0),
         T₂=(case=1, control=0)
     ),
     treatment_confounders=(T₁=[:W], T₂=[:W])
@@ -137,14 +137,14 @@ For two points interaction with both treatment and control levels ``0`` and ``1`
 
 ```math
 IATE_{0 \rightarrow 1, 0 \rightarrow 1}(P) = \mathbb{E}[Y|do(T_1=1, T_2=1)] - \mathbb{E}[Y|do(T_1=1, T_2=0)]  \\
-- \mathbb{E}[Y|do(T_1=0, T_2=1)] + \mathbb{E}[Y|do(T_1=0, T_2=0)] 
+- \mathbb{E}[Y|do(T_1=0, T_2=1)] + \mathbb{E}[Y|do(T_1=0, T_2=0)]
 ```
 
 - Statistical Estimand (via backdoor adjustment):
 
 ```math
 IATE_{0 \rightarrow 1, 0 \rightarrow 1}(P) = \mathbb{E}_{\textbf{W}}[\mathbb{E}[Y|T_1=1, T_2=1, \textbf{W}]] - \mathbb{E}[Y|T_1=1, T_2=0, \textbf{W}]  \\
-- \mathbb{E}[Y|T_1=0, T_2=1, \textbf{W}] + \mathbb{E}[Y|T_1=0, T_2=0, \textbf{W}]] 
+- \mathbb{E}[Y|T_1=0, T_2=1, \textbf{W}] + \mathbb{E}[Y|T_1=0, T_2=0, \textbf{W}]]
 ```
 
 - TMLE.jl Example
@@ -153,9 +153,9 @@ A causal estimand is given by:
 
 ```@example estimands
 causalΨ = IATE(
-    outcome=:Y, 
+    outcome=:Y,
     treatment_values=(
-        T₁=(case=1, control=0), 
+        T₁=(case=1, control=0),
         T₂=(case=1, control=0)
     )
 )
@@ -171,14 +171,16 @@ or defined directly:
 
 ```@example estimands
 statisticalΨ = IATE(
-    outcome=:Y, 
+    outcome=:Y,
     treatment_values=(
-        T₁=(case=1, control=0), 
+        T₁=(case=1, control=0),
         T₂=(case=1, control=0)
     ),
     treatment_confounders=(T₁=[:W], T₂=[:W])
 )
 ```
+
+Note: The treatment variables `T₁` and `T₂` can be continuous. The package will handle them appropriately during the estimation process.
 
 ## Composed Estimands
 
@@ -188,12 +190,12 @@ For example, the difference in ATE for a treatment with 3 levels (0, 1, 2) can b
 
 ```julia
 ATE₁ = ATE(
-    outcome = :Y, 
+    outcome = :Y,
     treatment_values = (T = (control = 0, case = 1),),
     treatment_confounders = [:W]
     )
 ATE₂ = ATE(
-    outcome = :Y, 
+    outcome = :Y,
     treatment_values = (T = (control = 1, case = 2),),
     treatment_confounders = [:W]
     )
